@@ -1,10 +1,10 @@
 # 📂 Documentación del Proyecto: Configuración de Red VPN (Tailscale)
 
 ## 🚀 1. Introducción y Propósito
-Para garantizar el acceso remoto seguro y el bypass de **CGNAT**, se implementó **Tailscale** (basado en el protocolo WireGuard). El objetivo es crear una red "Mesh" donde el servidor de Lanús y los dispositivos clientes (celulares, notebooks) coexistan en una subred privada virtual.
+Para garantizar el acceso remoto seguro y el bypass de **CGNAT**, se implementó **Tailscale** (basado en el protocolo WireGuard). El objetivo es crear una red "Mesh" donde el servidor de Lanús y los dispositivos clientes coexistan en una subred privada virtual.
 
-* **Nodo Servidor:** `gw-scale` (LXC 100)
-* **IP Mesh (Tailnet):** `100.103.86.43`
+- **Nodo Servidor:** `gw-scale` (LXC 100)
+- **IP Mesh (Tailnet):** `100.103.86.43`
 
 ---
 
@@ -17,7 +17,7 @@ lxc.cgroup2.devices.allow: c 10:200 rwm
 lxc.mount.entry: /dev/net/tun dev/net/tun none bind,create=file
 ```
 
-![Habilitación de TUN/TAP en Proxmox](Captura desde 2026-03-31 00-21-56.png)
+![Habilitación de TUN/TAP](../images/Captura%20desde%202026-03-31%2000-21-56.png)
 
 ---
 
@@ -29,11 +29,11 @@ curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) 
 tailscale up
 ```
 
-![Proceso de vinculación de Tailscale](Captura desde 2026-03-31 00-34-45.png)
+![Proceso de vinculación](../images/Captura%20desde%202026-03-31%2000-34-45.png)
 
 ---
 
-## 🔀 4. Implementación de Subnet Routing
+## 🔀 4. Implementación de Subnet Routing (Nivel Avanzado)
 Para optimizar la carga de la interfaz gráfica (GUI) de Proxmox y permitir el acceso a otros dispositivos de la red hogareña, se configuró el contenedor como un **Subnet Router**.
 
 ### 🔸 Paso A: Publicación de la ruta local
@@ -42,7 +42,6 @@ tailscale up --advertise-routes=192.168.0.0/24
 ```
 
 ### 🔸 Paso B: Habilitación de IP Forwarding (Kernel)
-Se modificó el kernel de Linux para permitir que los paquetes transiten entre la VPN y la LAN física:
 ```bash
 echo 'net.ipv4.ip_forward = 1' | tee -a /etc/sysctl.conf
 sysctl -p
@@ -51,23 +50,21 @@ sysctl -p
 ### 🔸 Paso C: Aprobación en el Panel de Control
 Desde la interfaz web de Tailscale, se habilitó la ruta `192.168.0.0/24` para el nodo `gw-scale`.
 
-![Panel de Administración - Rutas Aprobadas](Captura desde 2026-03-31 00-57-33.png)
-
 ---
 
 ## 📡 5. Verificación y Troubleshooting
 Se realizaron pruebas de conectividad desde un dispositivo móvil **Poco F6** conectado a la red 4G.
 
 * **Prueba ICMP (Ping):** Resultado exitoso con latencia promedio de **33.9ms**.
-* **Acceso Web:** Se validó el ingreso exitoso a la consola de Proxmox mediante la IP local `https://192.168.0.50:8006` a través del túnel.
+* **Acceso Web:** Se validó el ingreso exitoso a la consola de Proxmox mediante la IP local `https://192.168.0.50:8006`.
 
 ### ⚠️ Resolución de problemas de carga (MTU):
-En redes móviles con alta fragmentación, se aplicó un ajuste de MTU en la interfaz virtual para garantizar la fluidez de la interfaz web:
+Se aplicó un ajuste de MTU en la interfaz virtual para garantizar la fluidez de la interfaz web en redes móviles:
 ```bash
 ip link set dev tailscale0 mtu 1280
 ```
 
-![Estado final de los dispositivos en la Mesh](Captura desde 2026-03-31 00-54-07.png)
+![Estado final de la Mesh](../images/Captura%20desde%202026-03-31%2000-54-07.png)
 
 ---
 
