@@ -96,3 +96,11 @@ Dentro del contenedor de Tailscale, se aplicaron las reglas de persistencia y el
 ---
 **Documentación Consolidada:** 01 de Abril, 2026
 **Responsable:** Ingeniería de Infraestructura - HomeLab
+
+## 6. Optimización de Rendimiento: Cron Job
+
+Se migró el sistema de tareas de fondo de **AJAX** a **Cron** para reducir la carga del CPU durante el acceso de múltiples usuarios.
+
+**Comandos aplicados:**
+1. Cambio de modo: `occ background:cron`
+2. Automatización en el host: `*/5 * * * * docker exec -u 33 nextcloud php /var/www/html/cron.php`
