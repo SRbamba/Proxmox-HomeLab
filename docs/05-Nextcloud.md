@@ -1,25 +1,24 @@
-# Documentación 05: Despliegue y Configuración de Nextcloud
+# Documentación Integral: Despliegue de Nextcloud y Acceso Global VPN
 
-Este documento detalla el Procedimiento Operativo Estándar (SOP) para la instalación, corrección de errores y configuración de Nextcloud como servidor de almacenamiento privado, integrado con un volumen físico persistente de 2TB.
+Este documento detalla el Procedimiento Operativo Estándar (SOP) para la instalación de la nube privada Nextcloud y la configuración del Gateway VPN (Tailscale) para acceso remoto seguro desde el exterior.
 
 ---
 
 ## 1. Arquitectura del Sistema
 
-| Componente | Especificación Técnica |
-| :--- | :--- |
-| **Hipervisor** | Proxmox VE |
-| **Entorno de Ejecución** | LXC 101 (Ubuntu Server / CasaOS) |
-| **Plataforma** | Contenedor Docker (Nextcloud v28+) |
-| **Endpoint de Red** | `http://192.168.0.51:7580` |
-| **Directorio de Montaje Físico** | `/data/` (Mapeado hacia el HDD de 2TB) |
-| **Base de Datos** | SQLite (Integrada localmente) |
+| Componente | Especificación Técnica | Dirección IP |
+| :--- | :--- | :--- |
+| **Hipervisor** | Proxmox VE | `192.168.0.50` |
+| **Gateway VPN** | LXC 100 (`gw-scale`) | `192.168.0.100` |
+| **Servidor NAS** | LXC 101 (`casaos-nas`) | `192.168.0.51` |
+| **Endpoint App** | Docker (Nextcloud v28+) | Port: `7580` |
+| **Almacenamiento** | HDD 2TB (Mapeado a `/data`) | Físico (SATA) |
 
 ---
 
 ## 2. Solución de Errores de Inicialización (Vía CLI)
 
-Debido a fallos en el auto-aprovisionamiento del contenedor, la configuración inicial y la resolución de bloqueos se ejecutaron directamente en el binario `occ` de Nextcloud a través de la consola del LXC.
+Debido a fallos en el auto-aprovisionamiento, se utilizaron comandos `occ` directamente en la consola del LXC 101 para estabilizar el servicio.
 
 **2.1. Autorización de IP (Trusted Domains)**
 Para resolver el error "Acceso a través de un dominio del que no se confía":
@@ -29,64 +28,71 @@ Para resolver el error "Acceso a través de un dominio del que no se confía":
     docker exec -u 33 -it nextcloud php /var/www/html/occ config:system:set trusted_domains 1 --value=192.168.0.51
 
 **2.2. Aprovisionamiento Forzado de Superusuario**
-Para resolver la ausencia de credenciales base o base de datos corrupta, se utilizó la terminal de Proxmox:
+Para asegurar el acceso administrativo inicial:
 
 ![Creación de Administrador vía CLI](../images/Captura%20desde%202026-04-01%2012-32-16.png)
 
-    # Comando para crear el usuario administrador (Solicitará contraseña interactiva)
+    # Crear usuario administrador (Interactivo)
     docker exec -u 33 -it nextcloud php /var/www/html/occ user:add --group="admin" admin
 
-    # Comando alternativo para resetear la contraseña si el usuario ya figuraba en la DB
-    docker exec -u 33 -it nextcloud php /var/www/html/occ user:resetpassword admin
-
-**2.3. Activación Manual de Módulos (Bypass de App Store)**
-Para resolver la falta de resolución DNS interna que impedía descargar aplicaciones desde la tienda UI, se forzó la activación del plugin de almacenamiento externo:
+**2.3. Activación Manual de Módulos**
+Se forzó la activación del plugin de almacenamiento externo para eludir problemas de DNS en la tienda de apps:
 
     docker exec -u 33 -it nextcloud php /var/www/html/occ app:enable files_external
 
 ---
 
-## 3. Gestión de Identidades y Cuotas (Vía Web UI)
+## 3. Gestión de Almacenamiento y Usuarios
 
-Una vez estabilizado el acceso, se procedió a configurar la estructura de usuarios desde la interfaz web.
+Se configuró el aislamiento de datos sobre el disco físico de 2TB mediante el módulo *External Storage*.
 
-| Usuario (Login) | Nombre Mostrado | Grupo | Cuota de Disco |
-| :--- | :--- | :--- | :--- |
-| `admin` | Administrador | `admin` | Ilimitado |
-| `Bamba` | Bamba | `Familia` | **250 GB** |
-| `Sol` | Sol | `Familia` | **100 GB** |
-| `Nora` | Nora | `Familia` | **100 GB** |
-| `Jorge` | Jorge (Rulo) | `Familia` | **100 GB** |
+### 3.1. Estructura de Usuarios y Cuotas
+* **Bamba:** 250 GB
+* **Sol / Nora / Jorge:** 100 GB c/u
+* **Admin:** Ilimitado
 
----
-
-## 4. Mapeo de Almacenamiento Externo (Aislamiento Físico)
-
-Para garantizar la persistencia de datos en el HDD de 2TB, se enlazaron los directorios físicos mediante el módulo *External Storage*. Cada usuario tiene acceso restringido a su propia carpeta para asegurar la privacidad.
+### 3.2. Mapeo de Carpetas Físicas
+Cada usuario tiene su propio punto de montaje local para garantizar la privacidad:
 
 ![Configuración Final de Almacenamiento Externo](../images/Captura%20desde%202026-04-01%2013-02-18.png)
 
-| Nombre de la Carpeta | Almacenamiento Externo | Configuración (Ruta) | Restrict to (Permisos) |
-| :--- | :--- | :--- | :--- |
-| Mis Archivos | Local | `/data/Bamba` | Bamba, admin |
-| Mis Archivos | Local | `/data/Sol` | Sol, admin |
-| Mis Archivos | Local | `/data/Nora` | Nora, admin |
-| Mis Archivos | Local | `/data/Jorge` | Jorge, admin |
-
-> **Validación de Integridad:** El sistema confirma la correcta lectura/escritura (RW) mediante el indicador de estado verde en cada montaje.
+| Nombre en App | Ruta Física (Host) | Restringido a |
+| :--- | :--- | :--- |
+| Mis Archivos | `/data/Bamba` | Bamba |
+| Mis Archivos | `/data/Sol` | Sol |
 
 ---
 
-## 5. Configuración de Endpoint Móvil (Clientes Finales)
+## 4. Acceso Remoto Seguro (Subnet Routing)
 
-Para la sincronización de archivos desde los dispositivos móviles, se aplica la siguiente configuración en la aplicación oficial:
+Para acceder a Nextcloud desde redes externas (4G/LTE), se configuró el LXC 100 como nodo de salida de la red local.
 
-1. **Host de Conexión:** `http://192.168.0.51:7580`
-2. **Autenticación:** Credenciales individuales generadas en el Paso 3.
-3. **Sincronización de Medios (Auto-Upload):**
-   * Configurar directorio origen (`DCIM`).
-   * **Requisito mandatorio:** Marcar la casilla **"Solo en Wi-Fi"** para prevenir el consumo de datos móviles.
+### 4.1. Configuración de Privilegios en Proxmox (Host)
+Es mandatorio habilitar el reenvío de paquetes en el archivo de configuración del contenedor en el host físico (`/etc/pve/lxc/100.conf`):
+
+    lxc.sysctl.net.ipv4.ip_forward = 1
+    lxc.sysctl.net.ipv6.conf.all.forwarding = 1
+
+### 4.2. Activación del Gateway (LXC 100)
+Dentro del contenedor de Tailscale, se aplicaron las reglas de persistencia y el anuncio de la subred local:
+
+    # Aplicar IP Forwarding en el SO
+    echo 'net.ipv4.ip_forward = 1' | tee -a /etc/sysctl.d/99-tailscale.conf
+    sysctl -p /etc/sysctl.d/99-tailscale.conf
+
+    # Anunciar ruta de la red LAN de Lanús
+    tailscale up --advertise-routes=192.168.0.0/24
+
+> **Nota:** La ruta debe ser aprobada manualmente en el panel de Tailscale (Machines > Edit route settings).
 
 ---
-**Elaborado por:** Ingeniería de Infraestructura
-**Documento:** Tomo 05 - Almacenamiento y Nube Privada
+
+## 5. Implementación en Dispositivos Móviles
+
+1. **VPN:** Conectar el cliente Tailscale en el móvil.
+2. **Dirección del Servidor:** Utilizar la IP local directa `http://192.168.0.51:7580` (la VPN rutea el tráfico automáticamente).
+3. **Subida Automática:** Activar en la App de Nextcloud solo bajo conexión Wi-Fi para optimizar el plan de datos.
+
+---
+**Documentación Consolidada:** 01 de Abril, 2026
+**Responsable:** Ingeniería de Infraestructura - HomeLab
