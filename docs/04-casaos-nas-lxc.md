@@ -36,7 +36,7 @@ Tras la instalación, se verificó el estado del servicio mediante `systemctl`, 
 ## 🌐 5. Despliegue del Dashboard
 Finalmente, se accedió a la interfaz web para la configuración inicial del administrador. El dashboard reconoce correctamente las unidades de almacenamiento inyectadas, quedando listo para la instalación de aplicaciones.
 
-![Dashboard de administración de CasaOS](../images/casaos-07.jpg)
+![Dashboard de administración de CasaOS](../images/casaos-07.png)
 
 ---
 
