@@ -30,7 +30,7 @@ Para garantizar el acceso seguro desde cualquier ubicación (incluyendo redes ba
 La infraestructura se divide en contenedores ligeros (LXC) y máquinas virtuales (VM) para maximizar el aprovechamiento de los 16GB de RAM.
 
 ### 1. Gestión y Almacenamiento
-* **TrueNAS Core (VM):** Gestión del disco de 2TB mediante ZFS, proporcionando redundancia y snapshots de datos.
+* **CasaOS Core (LXC):** Gestión del disco de 2TB mediante EXT4, proporcionando redundancia y snapshots de datos.
 * **Nextcloud / Immich:** Nube privada para sincronización de archivos y galería fotográfica automatizada.
 
 ### 2. Desarrollo (SaaS Mabu)
