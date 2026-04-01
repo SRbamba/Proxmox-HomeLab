@@ -25,8 +25,6 @@ Para solucionar esto, se aplicó una configuración a nivel de hipervisor y un e
        mp1: /mnt/pve/HDD-Backups,mp=/DATA/Gallery/immich
 
 3. Se verificó el montaje correcto utilizando el comando `df -h` dentro del contenedor, confirmando que la ruta local ahora dispone de 1.8T libres.
-![Comprobación de Almacenamiento en consola](../images/Captura%20desde%202026-04-01%2013-42-53.png)
-![Almacenamiento de 1.8T verificado](../images/Captura%20desde%202026-04-01%2014-24-13.png)
 
 ---
 
@@ -40,14 +38,12 @@ Dado que Proxmox no permite tomar *snapshots* en contenedores con *Mount Points*
     cp -r /DATA/AppData/immich /DATA/AppData/immich_backup
 
 ### 2.2. Resolución de Error de Tags en Docker
-Al intentar forzar la versión en los ajustes de CasaOS utilizando los tags `v2.6.3` o `release`, el motor de Docker arrojó un error de referencia no encontrada (`failed to resolve reference... not found`), ya que los desarrolladores de Immich descontinuaron el uso de esos tags específicos en su repositorio.
+Al intentar forzar la versión en los ajustes de CasaOS utilizando los tags `v2.6.3` o `release`, el motor de Docker arrojó un error de referencia no encontrada (`failed to resolve reference... not found`).
 
 **Solución Definitiva:**
-Se reemplazó el tag de las imágenes de `immich-server` e `immich-machine-learning` por la etiqueta maestra **`v2`**. Esto instruye a Docker a descargar y compilar automáticamente la última versión estable de la rama 2.x.
-![Configuración de Tag v2 en CasaOS](../images/Captura%20desde%202026-04-01%2014-38-11.png)
+Se reemplazó el tag de las imágenes de `immich-server` e `immich-machine-learning` por la etiqueta maestra **`v2`**. Esto instruye a Docker a descargar automáticamente la última versión estable de la rama 2.x.
 
-Tras reiniciar los contenedores, el servidor se actualizó exitosamente y reconoció el espacio de almacenamiento asignado.
-![Panel de Immich Actualizado](../images/Captura%20desde%202026-04-01%2013-50-41.png)
+Tras reiniciar los contenedores, el servidor se actualizó exitosamente.
 
 ---
 
@@ -55,7 +51,9 @@ Tras reiniciar los contenedores, el servidor se actualizó exitosamente y recono
 
 Para mantener la organización en el sistema de archivos del disco de 2TB y evitar que un solo usuario acapare todo el almacenamiento, se configuraron perfiles individuales en el panel de administración. 
 
-A cada usuario se le asignó una cuota en GiB y un **Storage Label** (Etiqueta de almacenamiento) específico. Esto último obliga a Immich a guardar las fotos de cada persona en una carpeta con su nombre, en lugar de mezclar los archivos.
+A cada usuario se le asignó una cuota en GiB y un **Storage Label** (Etiqueta de almacenamiento) específico para separar físicamente sus archivos en carpetas.
+
+![Almacenamiento Distribuido](../images/Captura%20desde%202026-04-01%2016-08-33.png)
 
 **Distribución de Cuotas:**
 * **Nora:** 500 GiB (Storage Label: `nora`)
