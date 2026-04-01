@@ -8,7 +8,7 @@ El objetivo principal es evitar que las fotos y videos saturen el almacenamiento
 
 ### 1.1. Problema de Saturación Inicial
 Por defecto, Immich comenzó a guardar los archivos en el disco virtual del contenedor, lo que provocó una alerta de falta de espacio en CasaOS casi inmediata.
-![Error de falta de espacio en CasaOS](./Captura%20desde%202026-04-01%2013-58-06.jpg)
+![Error de falta de espacio en CasaOS](../images/Captura%20desde%202026-04-01%2013-58-06.png)
 
 ### 1.2. Problema de Permisos en LXC Unprivileged
 Al intentar redirigir los datos al disco de 2TB, el sistema devolvió el error `Operation not permitted`. Esto ocurre porque el usuario de Docker (UID 1000) dentro de un contenedor LXC sin privilegios no tiene autorización para escribir en un disco montado por Proxmox. Esto causó que el contenedor de Immich quedara en estado *Unhealthy* y fallaran las copias de archivos.
@@ -25,8 +25,8 @@ Para solucionar esto, se aplicó una configuración a nivel de hipervisor y un e
        mp1: /mnt/pve/HDD-Backups,mp=/DATA/Gallery/immich
 
 3. Se verificó el montaje correcto utilizando el comando `df -h` dentro del contenedor, confirmando que la ruta local ahora dispone de 1.8T libres.
-![Comprobación de Almacenamiento en consola](./Captura%20desde%202026-04-01%2013-42-53.jpg)
-![Almacenamiento de 1.8T verificado](./Captura%20desde%202026-04-01%2014-24-13.jpg)
+![Comprobación de Almacenamiento en consola](../images/Captura%20desde%202026-04-01%2013-42-53.png)
+![Almacenamiento de 1.8T verificado](../images/Captura%20desde%202026-04-01%2014-24-13.png)
 
 ---
 
@@ -44,10 +44,10 @@ Al intentar forzar la versión en los ajustes de CasaOS utilizando los tags `v2.
 
 **Solución Definitiva:**
 Se reemplazó el tag de las imágenes de `immich-server` e `immich-machine-learning` por la etiqueta maestra **`v2`**. Esto instruye a Docker a descargar y compilar automáticamente la última versión estable de la rama 2.x.
-![Configuración de Tag v2 en CasaOS](./Captura%20desde%202026-04-01%2014-38-11.png)
+![Configuración de Tag v2 en CasaOS](../images/Captura%20desde%202026-04-01%2014-38-11.png)
 
 Tras reiniciar los contenedores, el servidor se actualizó exitosamente y reconoció el espacio de almacenamiento asignado.
-![Panel de Immich Actualizado](./Captura%20desde%202026-04-01%2013-50-41.png)
+![Panel de Immich Actualizado](../images/Captura%20desde%202026-04-01%2013-50-41.png)
 
 ---
 
@@ -62,5 +62,3 @@ A cada usuario se le asignó una cuota en GiB y un **Storage Label** (Etiqueta d
 * **Sol:** 400 GiB (Storage Label: `sol`)
 * **Rulo:** 100 GiB (Storage Label: `rulo`)
 * **Bamba:** 100 GiB (Storage Label: `bamba`)
-
-![Gestión de Usuarios y Cuotas en Immich](./Captura%20desde%202026-04-01%2013-46-10.png)
