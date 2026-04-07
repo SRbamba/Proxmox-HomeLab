@@ -1,4 +1,4 @@
-# 🍿 Guía de Instalación: Servidor Plex en Proxmox + CasaOS
+# Guía de Instalación: Servidor Plex en Proxmox
 
 Esta guía documenta el proceso paso a paso para desplegar un servidor multimedia Plex nativo utilizando un hipervisor Proxmox, un contenedor LXC corriendo CasaOS, y mapeo de almacenamiento en un disco duro externo.
 
@@ -25,7 +25,7 @@ mkdir -p /mnt/pve/HDD-Datos/Plex_media/Series
 chmod -R 777 /mnt/pve/HDD-Datos/Plex_media
 ```
 
-![Preparación de directorios en consola Proxmox](images/Plex-01.png)
+![Preparación de directorios en consola Proxmox](../images/Plex-01.png)
 
 ## 🔌 Paso 2: Mapeo del Volumen al Contenedor LXC
 
@@ -43,7 +43,7 @@ nano /etc/pve/lxc/101.conf
 mp2: /mnt/pve/HDD-Datos/Plex_media,mp=/DATA/Plex
 ```
 
-![Edición del archivo 101.conf en nano](images/Plex-02.jpg)
+![Edición del archivo 101.conf en nano](../images/Plex-02.png)
 
 3. Guardar los cambios y reiniciar el contenedor para aplicar el montaje.
 
@@ -54,11 +54,11 @@ Con el almacenamiento listo, pasamos a la interfaz gráfica de CasaOS.
 1. Abrir la **App Store** integrada en CasaOS.
 2. Buscar **Plex** y seleccionar la versión estándar (evitar la versión "NVIDIA GPU" a menos que el servidor cuente con una tarjeta gráfica dedicada).
 
-![App Store de CasaOS buscando Plex](images/Plex-03.jpg)
+![App Store de CasaOS buscando Plex](../images/Plex-03.png)
 
 3. Hacer clic en **Instalar**. *Nota: No abrir la aplicación inmediatamente después de instalar.*
 
-![Dashboard de CasaOS con Plex instalado](images/Plex-04.jpg)
+![Dashboard de CasaOS con Plex instalado](../images/Plex-04.png)
 
 ## ⚙️ Paso 4: Configuración de Volúmenes en Docker
 
@@ -75,7 +75,7 @@ Antes de iniciar Plex, hay que indicarle al contenedor de Docker dónde buscar l
 1. Acceder a la interfaz web de Plex a través del navegador. 
    * ⚠️ **Importante:** Si al ingresar al puerto `32400` se muestra un código XML en bruto, es necesario agregar `/web` al final de la URL.
 
-![Error XML de Plex por falta del subdirectorio web](images/Plex-05.jpg)
+![Error XML de Plex por falta del subdirectorio web](../images/Plex-05.png)
 
 2. La URL final correcta debe quedar así:
 
@@ -88,6 +88,31 @@ http://<IP-DEL-SERVIDOR>:32400/web
    * Crear biblioteca "Películas" y apuntar a la carpeta interna `/movies`.
    * Crear biblioteca "Series" y apuntar a la carpeta interna `/tv`.
 
-![Interfaz web de Plex funcionando y sincronizada](images/Plex-06.jpg)
+![Interfaz web de Plex funcionando y sincronizada](../images/Plex-06.png)
 
-¡Listo! El servidor detectará automáticamente el contenido depositado en esas carpetas y descargará la metadata (carátulas, sinopsis, actores) de internet.
+## 📂 Paso 6: Subir Contenido Multimedia
+
+Una vez que el servidor está corriendo, existen varias formas de transferir películas y series al disco del servidor para que Plex las detecte.
+
+### Método A: A través de CasaOS (Interfaz Web)
+Ideal para subir archivos individuales de forma rápida.
+1. Ingresar al panel de **CasaOS**.
+2. Abrir la aplicación **Files** (Archivos).
+3. Navegar hasta la ruta: `DATA` ➡️ `Plex` ➡️ `Peliculas` (o `Series`).
+4. Arrastrar y soltar el archivo `.mp4` o `.mkv` desde la computadora local hacia la ventana del navegador.
+
+### Método B: Carpeta Compartida en Red (SMB)
+La opción recomendada para gestionar grandes volúmenes de datos.
+1. En la app **Files** de CasaOS, ubicar la carpeta `Plex` (dentro de `DATA`).
+2. Hacer clic en los tres puntos de la carpeta y seleccionar **Share** (Compartir).
+3. En el Explorador de Archivos de Windows (o el gestor de Linux/Mac), escribir la dirección IP del servidor en la barra de rutas:
+   * Windows: `\\<IP-DEL-SERVIDOR>`
+   * Linux/Mac: `smb://<IP-DEL-SERVIDOR>`
+4. Copiar y pegar los archivos directamente a través de la red local.
+
+### Método C: Vía Terminal (SCP)
+Para transferencias seguras desde otra consola Linux/Mac utilizando SSH.
+```bash
+# Ejemplo para copiar una película desde la PC local al contenedor LXC
+scp "/ruta/local/Pelicula (2024).mkv" root@<IP-DEL-SERVIDOR>:/DATA/Plex/Peliculas/
+```
