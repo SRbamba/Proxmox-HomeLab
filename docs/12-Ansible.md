@@ -41,6 +41,8 @@ Dentro del nodo `ansible-node`, generamos la llave RSA:
 ssh-keygen -t rsa -b 4096
 ```
 
+![../images/Ansible-01.png](../images/Ansible-01.png)
+
 ### Distribución de la llave pública
 Copiamos la llave a cada uno de los servidores del laboratorio:
 
@@ -68,6 +70,9 @@ ansible_node  ansible_host=192.168.0.55 ansible_user=root
 ```bash
 ansible Laboratorio -i hosts.ini -m ping
 ```
+![../images/Ansible-03.png](../images/Ansible-03.png)
+
+![../images/Ansible-01.png](../images/Ansible-05.png)
 
 ## 4. Troubleshooting y Resolución de Problemas Críticos
 Durante el despliegue tuvimos que resolver tres bloqueos importantes en la infraestructura.
@@ -119,6 +124,9 @@ ansible Laboratorio -i hosts.ini -m lineinfile -a "path=/etc/zabbix/zabbix_agent
 ansible Laboratorio -i hosts.ini -m service -a "name=zabbix-agent state=restarted enabled=yes" --become
 ```
 
+![../images/Ansible-03.png](../images/Ansible-03.png)
+
+
 ## 6. Configuración de Sensores Físicos (Mini PC i3-12100)
 Para monitorear la temperatura real del hardware, instalamos `lm-sensors` directamente en el host físico Proxmox (`svhome`).
 
@@ -143,3 +151,6 @@ Finalmente, organizamos la recolección de datos en un Dashboard centralizado co
 * **Centro:** Panel de **Current Problems** para tener un registro de alertas visuales inmediatas.
 * **Derecha:** Widgets **Gauge** (Velocímetro) para el control visual del uso de *Swap* y la *Temperatura* del servidor físico.
 * **Fila Inferior:** Gráfico de **Uso de RAM** estirado al 100% del ancho del dashboard para analizar el comportamiento histórico.
+
+  ![../images/Ansible-11.png](../images/Ansible-11.png)
+
