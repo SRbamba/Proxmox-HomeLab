@@ -70,9 +70,6 @@ ansible_node  ansible_host=192.168.0.55 ansible_user=root
 ```bash
 ansible Laboratorio -i hosts.ini -m ping
 ```
-![../images/Ansible-03.png](../images/Ansible-03.png)
-
-![../images/Ansible-01.png](../images/Ansible-05.png)
 
 ## 4. Troubleshooting y Resolución de Problemas Críticos
 Durante el despliegue tuvimos que resolver tres bloqueos importantes en la infraestructura.
