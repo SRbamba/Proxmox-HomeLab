@@ -101,6 +101,15 @@ sed -i 's/^deb/#deb/g' /etc/apt/sources.list.d/pve-enterprise.list
 echo "deb [http://download.proxmox.com/debian/pve](http://download.proxmox.com/debian/pve) trixie pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 apt update
 ```
+### Caso D: Zabbix Agent falla al iniciar (PID File Error)
+* **Problema:** El agente de Zabbix falla inmediatamente al arrancar. El log no existe y ejecutar `zabbix_agentd -f` arroja el error *cannot create PID file [/run/zabbix/zabbix_agentd.pid]: No such file or directory*.
+* **Causa:** El contenedor LXC no recreó la subcarpeta temporal en `/run/` requerida por el demonio.
+* **Solución:** Recrear la estructura de directorios y asignar la propiedad al usuario `zabbix`:
+  ```bash
+  mkdir -p /run/zabbix
+  mkdir -p /var/log/zabbix-agent
+  chown -R zabbix:zabbix /run/zabbix /var/log/zabbix-agent
+  systemctl restart zabbix-agent
 
 ## 5. Despliegue Automatizado con Ansible
 Con los problemas resueltos, utilizamos Ansible para instalar y configurar el agente de Zabbix en todos los nodos simultáneamente.
