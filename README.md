@@ -9,7 +9,7 @@ El nodo principal corre sobre una arquitectura compacta pero potente, optimizada
 | **CPU** | Intel Core i3-12100 (4C/8T @ 3.30GHz) | Cómputo y segmentación de hilos para VMs |
 | **RAM** | 16GB DDR4 (Plan de expansión a 32GB) | Gestión dinámica de memoria para contenedores LXC |
 | **SSD (Boot)** | 256GB M.2 NVMe | Sistema Operativo (PVE) y almacenamiento de plantillas |
-| **HDD (Storage)** | 2TB HGST Enterprise (Docked) | Almacenamiento masivo (ZFS / TrueNAS) |
+| **HDD (Storage)** | 2TB HGST Enterprise (Docked) | Almacenamiento masivo (ext4) |
 | **Network** | Gigabit Ethernet (Intel) | Backbone de conectividad LAN |
 
 ---
