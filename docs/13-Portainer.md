@@ -28,7 +28,7 @@ Este documento registra la preparación del nodo principal de contenedores del H
 ### Instalación de Docker Engine
 Se provisionó el motor nativo de Docker utilizando el script oficial automatizado para sistemas basados en Debian:
 
-```bash
+~~~bash
 # Actualización del sistema e instalación de dependencias base
 apt update && apt upgrade -y
 apt install ca-certificates curl gnupg lsb-release -y
@@ -36,12 +36,12 @@ apt install ca-certificates curl gnupg lsb-release -y
 # Descarga y ejecución del script de instalación de Docker
 curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh
 sh get-docker.sh
-```
+~~~
 
 ### Despliegue de Portainer CE
 Se levantó el contenedor de administración enlazando el socket local de Docker y creando un volumen persistente para resguardar la base de datos de Portainer. 
 
-```bash
+~~~bash
 # Creación del volumen persistente
 docker volume create portainer_data
 
@@ -51,10 +51,11 @@ docker run -d -p 8000:8000 -p 9000:9000 -p 9443:9443 --name portainer \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v portainer_data:/data \
     portainer/portainer-ce:latest
-```
+~~~
 
 > **Configuración Inicial:** El acceso se realiza mediante `https://192.168.0.61:9443`. En el primer inicio se seleccionó **"Get Started"** para vincular el entorno local.
-> ![Primer inicio de Portainer CE](Portainer-01.png)
+> 
+> ![Primer inicio de Portainer CE](../images/Portainer-01.png)
 
 ---
 
@@ -62,11 +63,11 @@ docker run -d -p 8000:8000 -p 9000:9000 -p 9443:9443 --name portainer \
 
 Para acceder a Portainer utilizando el dominio interno `portainer.prox-iz.com.ar`, se configuró un Server Block en el contenedor LXC de Nginx Proxy (`192.168.0.60`).
 
-```bash
+~~~bash
 nano /etc/nginx/sites-available/portainer.prox-iz.com.ar
-```
+~~~
 
-```nginx
+~~~nginx
 server {
     listen 8080;
     server_name portainer.prox-iz.com.ar;
@@ -79,8 +80,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-```
-> ![Configuración del Server Block en Nginx](Portainer-02.jpg)
+~~~
+
+> ![Configuración del Server Block en Nginx](../images/Portainer-02.jpg)
+> 
 > **Reinicio del servicio:** `ln -s /etc/nginx/sites-available/portainer.prox-iz.com.ar /etc/nginx/sites-enabled/` seguido de `systemctl reload nginx`.
 
 ---
@@ -93,7 +96,7 @@ Para centralizar los accesos del laboratorio en un portal unificado, se despleg�
 2. **Name:** `homepage`
 3. Pegar la siguiente configuración (se mapea al puerto local `3000`):
 
-```yaml
+~~~yaml
 version: '3.3'
 services:
   homepage:
@@ -105,10 +108,12 @@ services:
     volumes:
       - /opt/homepage/config:/app/config # Directorio en el host para persistencia
       - /var/run/docker.sock:/var/run/docker.sock:ro # Permite leer el estado de los contenedores
-```
+~~~
 
 4. Desplegar el Stack. Los archivos de configuración (`services.yaml`, `widgets.yaml`, etc.) se generan automáticamente en `/opt/homepage/config` del LXC.
-5. **Acceso:** `http://192.168.0.61:3000`
+5. **Acceso Proxy:** Se configuró en Nginx bajo el dominio `homepage.prox-iz.com.ar`.
+
+![Dashboard de Homepage](../images/Homepage-01.png)
 
 ---
 
@@ -120,7 +125,7 @@ Para la visualización avanzada de métricas, integración con Zabbix y análisi
 2. **Name:** `grafana`
 3. Pegar la siguiente configuración:
 
-```yaml
+~~~yaml
 version: '3.3'
 services:
   grafana:
@@ -137,9 +142,20 @@ services:
 
 volumes:
   grafana_data:
-```
+~~~
 
 4. Desplegar el Stack.
+
+![Creación del Stack de Grafana en Portainer](../images/Grafana-01.jpg)
+
 5. **Acceso:** `http://192.168.0.61:3001`
 
+### Proxy Inverso para Grafana
+Al igual que con los otros servicios, se configuró el bloque de servidor en Nginx para el dominio interno apuntando al puerto del contenedor.
+
+![Proxy Inverso para Grafana](../images/Grafana-02.jpg)
+
+### Integración y Visualización
 *(Las configuraciones posteriores de Datasources para conectar Zabbix y Loki se gestionan desde la propia interfaz gráfica de Grafana).*
+
+![Dashboard de Zabbix en Grafana](../images/Grafana-03.jpg)
